@@ -12,10 +12,11 @@ import { useEffect, useState } from "react";
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const { user, login, sessionLoading } = useAppwrite();
+  const { user, register, sessionLoading } = useAppwrite();
   const [form, setForm] = useState({
     email: "",
     password: "",
+    name: "",
   });
 
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function Page() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await login(form.email, form.password);
+    await register(form.email, form.password, form.name);
     setLoading(false);
   };
 
@@ -35,9 +36,19 @@ export default function Page() {
 
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
-      <h1 className="text-2xl font-bold">Login</h1>
-      <Card className="mt-4 p-4 w-full">
+      <h1 className="text-2xl font-bold">Register</h1>
+      <Card className="mt-4 p-4">
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <Label>Full Name</Label>
+            <Input
+              className="mt-2"
+              type="text"
+              placeholder="John Doe"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
           <div className="mb-4">
             <Label>Email</Label>
             <Input
@@ -60,14 +71,14 @@ export default function Page() {
           </div>
           <Button disabled={loading} className="mt-4 w-full">
             {loading && <Loader className="mr-2 animate-spin" size={16} />}
-            Login
+            Register
           </Button>
         </form>
         <div className="text-center mt-4">
           <span>
-            Dont have an account?{" "}
-            <Link href="/register" className="text-blue-500">
-              Register
+            Already have an account?{" "}
+            <Link href="/" className="text-blue-500">
+              Login
             </Link>
           </span>
         </div>

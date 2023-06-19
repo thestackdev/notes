@@ -9,7 +9,7 @@ export default function Navbar({
   return (
     <nav
       className={cn(
-        "flex items-center justify-between p-2 space-x-4 mx-auto max-w-[1200px] lg:space-x-6",
+        "flex flex-row w-full items-center justify-between py-2 px-6 h-16 space-x-4 mx-auto max-w-[1200px] lg:space-x-6",
         className
       )}
       {...props}

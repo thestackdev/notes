@@ -1,19 +1,20 @@
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/Toaster";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import AppwriteProvider from "@/providers/appwrite-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Todo App",
-  description: "A todo app built with Next.js and Appwrite",
+  description: "Manage your tasks with Todo App",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -22,12 +23,16 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(`
-          ${inter.className} min-h-screen bg-background font-sans antialiased`)}
+          ${inter.className} bg-background min-h-screen w-full font-sans antialiased`)}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar />
-          <Separator />
-          {children}
+          <AppwriteProvider>
+            <div className="flex flex-col h-screen">
+              <Navbar />
+              <Separator />
+              <div className="flex flex-grow">{children}</div>
+            </div>
+          </AppwriteProvider>
         </ThemeProvider>
         <Toaster />
       </body>

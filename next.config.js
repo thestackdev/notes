@@ -1,4 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {}
+const production = process.env.NODE_ENV === "production";
 
-module.exports = nextConfig
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  basePath: production ? "/todo" : "",
+};
+
+module.exports = nextConfig;
