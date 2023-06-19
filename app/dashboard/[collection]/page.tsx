@@ -15,13 +15,11 @@ import {
 } from "appwrite";
 import { useEffect, useState } from "react";
 
-export default function Page({
-  params: { collection },
-}: React.PropsWithChildren<{
-  params: {
-    collection: string;
-  };
-}>) {
+interface CollectionProps {
+  params: { collection: string };
+}
+
+export default function Page({ params: { collection } }: CollectionProps) {
   const { user } = useAppwrite();
   const [label, setLabel] = useState("");
   const [data, setData] = useState<Models.Document[]>([]);
@@ -107,10 +105,12 @@ export default function Page({
       </form>
       <div className="w-full mt-6 flex flex-col gap-">
         {data.map((document) => (
-          <div className="flex items-center space-x-2 hover:bg-accent/90 p-2 rounded-lg">
+          <div
+            className="flex items-center space-x-2 hover:bg-accent/90 p-2 rounded-lg"
+            key={document.$id}
+          >
             <Checkbox
               checked={document.done}
-              id={document.$id}
               onCheckedChange={(done: boolean) =>
                 updateTodo(document.$id, done)
               }
