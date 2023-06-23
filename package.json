@@ -29,7 +29,7 @@
     "@types/react": "18.2.12",
     "@types/react-dom": "18.2.5",
     "autoprefixer": "10.4.14",
-    "aws-cdk-lib": "2.79.1",
+    "aws-cdk-lib": "2.80.0",
     "constructs": "10.1.156",
     "encoding": "^0.1.13",
     "eslint": "8.43.0",
