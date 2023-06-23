@@ -4,34 +4,39 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAppwrite } from "@/providers/appwrite-provider";
-import { Loader } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useSupabase } from "@/providers/supabase-provider";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const { user, login, sessionLoading } = useAppwrite();
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const router = useRouter();
+  const supabase = useSupabase();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await login(form.email, form.password);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) toast({ title: "Login Failed", description: error.message });
     setLoading(false);
+    router.replace("/dashboard");
   };
 
-  useEffect(() => {
-    if (!sessionLoading && user) router.push("/dashboard");
-  }, [user, sessionLoading]);
+  // useEffect(() => {
+  //   if (!sessionLoading && user) router.push("/dashboard");
+  // }, [user, sessionLoading]);
 
-  if (user) return null;
+  // if (user) return null;
 
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
@@ -44,8 +49,9 @@ export default function Page() {
               className="mt-2"
               type="email"
               placeholder="user@example.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="mb-4">
@@ -54,12 +60,12 @@ export default function Page() {
               className="mt-2"
               type="password"
               placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <Button disabled={loading} className="mt-4 w-full">
-            {loading && <Loader className="mr-2 animate-spin" size={16} />}
+          <Button loading={loading} className="mt-4 w-full">
             Login
           </Button>
         </form>

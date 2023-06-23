@@ -2,17 +2,8 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { AppwriteConfig, client, databases } from "@/lib/appwrite";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
-import { useAppwrite } from "@/providers/appwrite-provider";
-import {
-  ID,
-  Models,
-  Permission,
-  Query,
-  RealtimeResponseEvent,
-  Role,
-} from "appwrite";
 import { useEffect, useState } from "react";
 
 interface CollectionProps {
@@ -20,78 +11,66 @@ interface CollectionProps {
 }
 
 export default function Page({ params: { collection } }: CollectionProps) {
-  const { user } = useAppwrite();
-  const [label, setLabel] = useState("");
-  const [data, setData] = useState<Models.Document[]>([]);
-  const channel = `databases.${AppwriteConfig.databaseId}.collections.${AppwriteConfig.todosId}.documents`;
-
-  async function getTodos() {
-    const data = await databases.listDocuments(
-      AppwriteConfig.databaseId,
-      AppwriteConfig.todosId,
-      [Query.equal("collections", collection)]
-    );
-    setData(data.documents);
-  }
+  const [content, setContent] = useState("");
+  const [data, setData] = useState<any[]>([]);
+  const supabase = supabaseBrowser();
 
   async function updateTodo(id: string, done: boolean) {
-    await databases.updateDocument(
-      AppwriteConfig.databaseId,
-      AppwriteConfig.todosId,
-      id,
-      { done: done }
-    );
+    await supabase.from("data").update({ done }).eq("id", id);
   }
 
   async function createTodo(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!content) return;
 
-    if (!user || !label) return;
+    await supabase.from("data").insert({ content, collection });
 
-    await databases.createDocument(
-      AppwriteConfig.databaseId,
-      AppwriteConfig.todosId,
-      ID.unique(),
-      { label: label, collections: collection },
-      [
-        Permission.read(Role.user(user.$id)),
-        Permission.update(Role.user(user.$id)),
-        Permission.delete(Role.user(user.$id)),
-      ]
-    );
-    setLabel("");
+    setContent("");
+  }
+
+  async function getData() {
+    const { data, error } = await supabase
+      .from("data")
+      .select("*")
+      .eq("collection", collection);
+
+    if (!data) return;
+
+    setData(data);
   }
 
   useEffect(() => {
-    getTodos();
+    const channel = supabase
+      .channel("notes-data")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "notes", table: "data" },
+        (payload) => {
+          switch (payload.eventType) {
+            case "INSERT":
+              setData((e) => [...e, payload.new]);
+              break;
+            case "DELETE":
+              setData((e) => e.filter((x) => x.id !== payload.old.id));
+              break;
+            case "UPDATE":
+              setData((e) =>
+                e.map((x) => (x.id === payload.new.id ? payload.new : x))
+              );
+            default:
+              break;
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    const unsubscribe = client.subscribe(
-      channel,
-      (event: RealtimeResponseEvent<any>) => {
-        switch (event.events[5]) {
-          case `${channel}.*.create`:
-            setData((prev) => [...prev, event.payload]);
-            break;
-          case `${channel}.*.delete`:
-            setData((prev) =>
-              prev.filter((document) => document.$id !== event.payload.$id)
-            );
-            break;
-          case `${channel}.*.update`:
-            setData((prev) =>
-              prev.map((document) =>
-                document.$id === event.payload.$id
-                  ? { ...document, ...event.payload }
-                  : document
-              )
-            );
-            break;
-        }
-      }
-    );
-    return () => unsubscribe();
+    getData();
   }, []);
 
   return (
@@ -99,30 +78,28 @@ export default function Page({ params: { collection } }: CollectionProps) {
       <form className="w-full" onSubmit={createTodo}>
         <Input
           placeholder="Create a checklist"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
         />
       </form>
       <div className="w-full mt-6 flex flex-col gap-">
-        {data.map((document) => (
+        {data.map((e) => (
           <div
             className="flex items-center space-x-2 hover:bg-accent/90 p-2 rounded-lg"
-            key={document.$id}
+            key={e.$id}
           >
             <Checkbox
-              checked={document.done}
-              onCheckedChange={(done: boolean) =>
-                updateTodo(document.$id, done)
-              }
+              checked={e.done}
+              onCheckedChange={(done: boolean) => updateTodo(e.id, done)}
             />
             <label
-              htmlFor={document.$id}
+              htmlFor={e.id}
               className={cn(
                 "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                document.done ? "line-through" : ""
+                e.done ? "line-through" : ""
               )}
             >
-              {document.label}
+              {e.content}
             </label>
           </div>
         ))}

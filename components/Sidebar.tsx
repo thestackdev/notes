@@ -1,11 +1,6 @@
 "use client";
 
-import { useAppwrite } from "@/providers/appwrite-provider";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { AppwriteConfig, client, databases } from "@/lib/appwrite";
 import {
   Dialog,
   DialogContent,
@@ -16,67 +11,98 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ID, Models, Permission, Role } from "appwrite";
-import { DialogClose } from "@radix-ui/react-dialog";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Trash } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useToast } from "./ui/use-toast";
 
-export default function Sidebar({
-  documents,
-}: React.PropsWithChildren<{
-  documents: Models.Document[];
-}>) {
-  const { user, logout } = useAppwrite();
+export default function Sidebar() {
+  const supabase = supabaseBrowser();
   const router = useRouter();
-  const [label, setLabel] = useState("");
+  const { toast } = useToast();
+
+  const [collections, setCollections] = useState<any[]>([]);
+  const [title, setTitle] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [creatingCollection, setCreatingCollection] = useState(false);
+  const [createModalLoading, setCreateModalLoading] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingCollection, setDeletingCollection] = useState(false);
-  const [deletingCollectionId, setDeletingCollectionId] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [currentItemId, setCurrentItemId] = useState(null);
 
   async function createCollection(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!title) return;
 
-    try {
-      if (!user || !label) return;
-      setCreatingCollection(true);
-      await databases.createDocument(
-        AppwriteConfig.databaseId,
-        AppwriteConfig.collectionId,
-        ID.unique(),
-        { label: label },
-        [
-          Permission.read(Role.user(user.$id)),
-          Permission.update(Role.user(user.$id)),
-          Permission.delete(Role.user(user.$id)),
-        ]
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setCreatingCollection(false);
-      setCreateModalOpen(false);
-      setLabel("");
-    }
+    setCreateModalLoading(true);
+    await supabase.from("collections").insert({ title });
+    setCreateModalLoading(false);
+    setCreateModalOpen(false);
   }
 
   async function deleteCollection() {
-    try {
-      if (!user) return;
-      setDeletingCollection(true);
-      await databases.deleteDocument(
-        AppwriteConfig.databaseId,
-        AppwriteConfig.collectionId,
-        deletingCollectionId
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setDeletingCollection(false);
-      setDeleteModalOpen(false);
-    }
+    setDeleteLoading(true);
+    const { data, error } = await supabase
+      .from("collections")
+      .delete()
+      .eq("id", currentItemId);
+    console.log(data, error);
+
+    setDeleteLoading(false);
+    setDeleteModalOpen(false);
+    setTitle("");
+    router.replace("/dashboard");
   }
+
+  async function getCollections() {
+    const { data, error } = await supabase.from("collections").select("*");
+
+    if (error) {
+      toast({ title: "Error", description: error.message });
+      return;
+    }
+
+    setCollections(data);
+  }
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("notes-collections")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "notes", table: "collections" },
+        (payload) => {
+          console.log(payload);
+
+          switch (payload.eventType) {
+            case "INSERT":
+              setCollections((e) => [...e, payload.new]);
+              break;
+            case "DELETE":
+              setCollections((e) => e.filter((x) => x.id !== payload.old.id));
+              break;
+            case "UPDATE":
+              setCollections((e) =>
+                e.map((x) => (x.id === payload.new.id ? payload.new : x))
+              );
+            default:
+              break;
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    getCollections();
+  }, []);
 
   return (
     <div className="flex flex-col border-r h-full w-full max-w-[300px] justify-between p-4">
@@ -91,18 +117,23 @@ export default function Sidebar({
             </DialogHeader>
             <DialogDescription>
               <Input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
                 className="my-4"
-                placeholder="Collection Name"
+                placeholder="Collection Title"
                 required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                name="title"
               />
             </DialogDescription>
             <DialogFooter className="flex flex-row gap-2">
-              <DialogClose asChild>
+              <DialogTrigger>
                 <Button variant="secondary">Cancel</Button>
-              </DialogClose>
-              <Button variant="default" loading={creatingCollection}>
+              </DialogTrigger>
+              <Button
+                loading={createModalLoading}
+                variant="default"
+                type="submit"
+              >
                 Create
               </Button>
             </DialogFooter>
@@ -118,15 +149,13 @@ export default function Sidebar({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row gap-2">
-            <DialogClose asChild>
+            <DialogTrigger asChild>
               <Button variant="secondary">Cancel</Button>
-            </DialogClose>
+            </DialogTrigger>
             <Button
+              loading={deleteLoading}
+              onClick={deleteCollection}
               variant="destructive"
-              onClick={() => {
-                deleteCollection();
-              }}
-              loading={deletingCollection}
             >
               Delete
             </Button>
@@ -134,21 +163,21 @@ export default function Sidebar({
         </DialogContent>
       </Dialog>
       <div className="flex flex-col w-full h-full gap-2 my-4">
-        {documents.map((document) => (
+        {collections?.map((collection) => (
           <Link
             className="w-full flex justify-between items-center gap-2 hover:bg-accent capitalize rounded-md p-2"
-            href={`/dashboard/${document.$id}`}
-            key={document.$id}
+            href={`/dashboard/${collection.id}`}
+            key={collection.id}
           >
-            {document.label}
-            <Button variant="ghost">
-              <Trash
-                onClick={() => {
-                  setDeleteModalOpen(true);
-                  setDeletingCollectionId(document.$id);
-                }}
-                className="w-4 h-4"
-              />
+            {collection.title}
+            <Button
+              variant="ghost"
+              onClick={(e) => {
+                setDeleteModalOpen(true);
+                setCurrentItemId(collection.id);
+              }}
+            >
+              <Trash className="w-4 h-4" />
             </Button>
           </Link>
         ))}
