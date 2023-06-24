@@ -36,7 +36,6 @@ export default {
     app.setDefaultRemovalPolicy("destroy");
     app.stack(function Site({ stack }) {
       const site = new NextjsSite(stack, "site", {
-        path: "notes",
         customDomain: {
           domainName: PUBLISH_DOMAIN,
           isExternalDomain: true,
