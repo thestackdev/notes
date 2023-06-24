@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { cn } from "@/lib/utils";
 import { Trash } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useToast } from "./ui/use-toast";
 
@@ -22,6 +23,8 @@ export default function Sidebar() {
   const supabase = supabaseBrowser();
   const router = useRouter();
   const { toast } = useToast();
+  const params = useParams();
+  const currentCollection = params?.collection;
 
   const [collections, setCollections] = useState<any[]>([]);
   const [title, setTitle] = useState("");
@@ -38,23 +41,37 @@ export default function Sidebar() {
     if (!title) return;
 
     setCreateModalLoading(true);
-    await supabase.from("collections").insert({ title });
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ title });
+
     setCreateModalLoading(false);
+
+    if (error) {
+      toast({ title: "Error", description: error.message });
+      return;
+    }
+
     setCreateModalOpen(false);
+    setTitle("");
   }
 
   async function deleteCollection() {
     setDeleteLoading(true);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("collections")
       .delete()
       .eq("id", currentItemId);
-    console.log(data, error);
 
     setDeleteLoading(false);
+
+    if (error) {
+      toast({ title: "Error", description: error.message });
+      return;
+    }
+
     setDeleteModalOpen(false);
-    setTitle("");
-    router.replace("/dashboard");
+    router.replace("/");
   }
 
   async function getCollections() {
@@ -126,9 +143,6 @@ export default function Sidebar() {
               />
             </DialogDescription>
             <DialogFooter className="flex flex-row gap-2">
-              <DialogTrigger>
-                <Button variant="secondary">Cancel</Button>
-              </DialogTrigger>
               <Button
                 loading={createModalLoading}
                 variant="default"
@@ -136,6 +150,9 @@ export default function Sidebar() {
               >
                 Create
               </Button>
+              <DialogTrigger>
+                <Button variant="secondary">Cancel</Button>
+              </DialogTrigger>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -145,7 +162,8 @@ export default function Sidebar() {
           <DialogHeader>
             <DialogTitle>Delete Collection?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this collection?
+              Are you sure you want to delete this collection and all it's
+              notes?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row gap-2">
@@ -165,13 +183,17 @@ export default function Sidebar() {
       <div className="flex flex-col w-full h-full gap-2 my-4">
         {collections?.map((collection) => (
           <Link
-            className="w-full flex justify-between items-center gap-2 hover:bg-accent capitalize rounded-md p-2"
-            href={`/dashboard/${collection.id}`}
+            className={cn(
+              "w-full flex group justify-between items-center gap-2 hover:bg-accent capitalize rounded-md p-2",
+              currentCollection === collection.id && "bg-accent text-white"
+            )}
+            href={`/${collection.id}`}
             key={collection.id}
           >
             {collection.title}
             <Button
               variant="ghost"
+              className="group-hover:visible invisible"
               onClick={(e) => {
                 setDeleteModalOpen(true);
                 setCurrentItemId(collection.id);

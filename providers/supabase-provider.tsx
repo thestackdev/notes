@@ -38,6 +38,12 @@ export default function SupabaseProvider({
     };
   }, [router, supabase, session]);
 
+  useEffect(() => {
+    if (!session) {
+      router.push("/login");
+    }
+  }, []);
+
   return (
     <Context.Provider value={{ supabase, session }}>
       <>{children}</>

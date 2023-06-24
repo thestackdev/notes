@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/Toaster";
 import { Separator } from "@/components/ui/separator";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -34,9 +35,12 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SupabaseProvider session={session}>
             <div className="flex flex-col h-screen">
-              <Navbar />
+              <Navbar session={session} />
               <Separator />
-              <div className="flex flex-grow">{children}</div>
+              <div className="flex flex-grow">
+                {session && <Sidebar />}
+                {children}
+              </div>
             </div>
           </SupabaseProvider>
         </ThemeProvider>

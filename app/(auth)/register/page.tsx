@@ -1,58 +1,53 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
-import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { useToast } from "@/components/ui/use-toast";
+import { useSupabase } from "@/providers/supabase-provider";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Page() {
-  // const [loading, setLoading] = useState(false);
-  // const { user, register, sessionLoading } = useAppwrite();
-  // const [form, setForm] = useState({
-  //   email: "",
-  //   password: "",
-  //   name: "",
-  // });
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    name: "",
+  });
 
-  // const router = useRouter();
+  const supabase = useSupabase();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   await register(form.email, form.password, form.name);
-  //   setLoading(false);
-  // };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: { name: form.name },
+      },
+    });
 
-  const handleSignUp = async (formData: FormData) => {
-    "use server";
-    const email = formData.get("email")?.toString();
-    const password = formData.get("password")?.toString();
+    setLoading(false);
 
-    console.log(email, password);
+    if (error) {
+      toast({ title: "Registration Failed", description: error.message });
+      return;
+    }
 
-    if (!email || !password) return;
-
-    const supabase = createServerActionClient({ cookies });
-    const { data, error } = await supabase.auth.signUp({ email, password });
-
-    console.log(data, error);
-
-    revalidatePath("/");
+    router.replace("/");
   };
-
-  // useEffect(() => {
-  //   if (!sessionLoading && user) router.push("/dashboard");
-  // }, [user, sessionLoading]);
-
-  // if (user) return null;
 
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
       <h1 className="text-2xl font-bold">Register</h1>
       <Card className="mt-4 p-4">
-        <form action={handleSignUp}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <Label>Full Name</Label>
             <Input className="mt-2" type="text" placeholder="John Doe" />
@@ -63,6 +58,8 @@ export default function Page() {
               className="mt-2"
               type="email"
               name="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="user@example.com"
             />
           </div>
@@ -73,9 +70,13 @@ export default function Page() {
               name="password"
               type="password"
               placeholder="Password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>
-          <Button className="mt-4 w-full">Register</Button>
+          <Button loading={loading} className="mt-4 w-full">
+            Register
+          </Button>
         </form>
         <div className="text-center mt-4">
           <span>
