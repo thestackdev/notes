@@ -162,8 +162,7 @@ export default function Sidebar() {
           <DialogHeader>
             <DialogTitle>Delete Collection?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this collection and all it's
-              notes?
+              Are you sure you want to delete this collection?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row gap-2">
