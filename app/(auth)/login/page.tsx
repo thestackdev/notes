@@ -2,72 +2,101 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { useSupabase } from "@/providers/supabase-provider";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const formSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const router = useRouter();
-  const supabase = useSupabase();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const response = await signIn("credentials", {
+      ...values,
+      redirect: false,
     });
 
     setLoading(false);
 
-    if (error) {
-      toast({ title: "Login Failed", description: error.message });
+    if (response?.error) {
+      toast({
+        title: "Login Failed",
+        description: "No user found with that email and password",
+      });
       return;
     }
-
     router.replace("/");
-  };
+  }
 
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
       <h1 className="text-2xl font-bold">Login</h1>
       <Card className="mt-4 p-4 w-full">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label>Email</Label>
-            <Input
-              className="mt-2"
-              type="email"
-              placeholder="user@example.com"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Email Address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="mb-4">
-            <Label>Password</Label>
-            <Input
-              className="mt-2"
-              type="password"
-              placeholder="Password"
+            <FormField
+              control={form.control}
               name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Password" {...field} type="password" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <Button loading={loading} className="mt-4 w-full">
-            Login
-          </Button>
-        </form>
+            <Button loading={loading} type="submit">
+              Submit
+            </Button>
+          </form>
+        </Form>
         <div className="text-center mt-4">
           <span>
             Dont have an account?{" "}

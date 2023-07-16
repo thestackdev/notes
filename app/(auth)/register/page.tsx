@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { useSupabase } from "@/providers/supabase-provider";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,31 +15,34 @@ export default function Page() {
   const [form, setForm] = useState({
     email: "",
     password: "",
-    name: "",
+    username: "",
+    display_name: "",
   });
 
-  const supabase = useSupabase();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+
+    const response = await signIn("credentials", {
       email: form.email,
       password: form.password,
-      options: {
-        data: { name: form.name },
-      },
+      username: form.username,
+      display_name: form.display_name,
+      isNewUser: true,
+      redirect: false,
     });
 
     setLoading(false);
-
-    if (error) {
-      toast({ title: "Registration Failed", description: error.message });
+    if (response?.error) {
+      toast({
+        title: "Registration Failed",
+        description: "Unable to register at the moment.",
+      });
       return;
     }
-
     router.replace("/");
   };
 
@@ -50,7 +53,25 @@ export default function Page() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <Label>Full Name</Label>
-            <Input className="mt-2" type="text" placeholder="John Doe" />
+            <Input
+              className="mt-2"
+              type="text"
+              placeholder="John Doe"
+              value={form.display_name}
+              onChange={(e) =>
+                setForm({ ...form, display_name: e.target.value })
+              }
+            />
+          </div>
+          <div className="mb-4">
+            <Label>Username</Label>
+            <Input
+              className="mt-2"
+              type="text"
+              placeholder="john"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+            />
           </div>
           <div className="mb-4">
             <Label>Email</Label>

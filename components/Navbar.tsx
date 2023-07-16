@@ -9,17 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useSupabase } from "@/providers/supabase-provider";
-import { Session } from "@supabase/supabase-js";
 import { Terminal } from "lucide-react";
+import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 
 interface NavbarProps {
-  session: Session | null;
+  session?: Session | null;
 }
 
 export default function Navbar({ session }: NavbarProps) {
-  const supabase = useSupabase();
   const router = useRouter();
 
   return (
@@ -50,8 +48,8 @@ export default function Navbar({ session }: NavbarProps) {
             <DropdownMenuContent>
               <DropdownMenuItem
                 onClick={async () => {
-                  await supabase.auth.signOut();
-                  router.replace("/login");
+                  // await supabase.auth.signOut();
+                  // router.replace("/login");
                 }}
               >
                 Logout

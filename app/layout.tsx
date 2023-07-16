@@ -1,11 +1,12 @@
+import { OPTIONS } from "@/app/api/auth/[...nextauth]/route";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/Toaster";
 import { Separator } from "@/components/ui/separator";
-import { supabaseServer } from "@/lib/supabase-server";
 import { cn } from "@/lib/utils";
-import SupabaseProvider from "@/providers/supabase-provider";
+import { NextAuthProvider } from "@/providers/nextauth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { getServerSession } from "next-auth/next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -21,28 +22,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = supabaseServer();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getServerSession(OPTIONS);
+
+  console.log(session);
 
   return (
     <html lang="en">
       <body
-        className={cn(`
-          ${inter.className} bg-background min-h-screen w-full font-sans antialiased`)}
+        className={cn(
+          `bg-background min-h-screen w-full font-sans antialiased`
+        )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SupabaseProvider session={session}>
+          <NextAuthProvider>
             <div className="flex flex-col h-screen">
-              <Navbar session={session} />
+              <Navbar />
               <Separator />
               <div className="flex flex-grow">
                 {session && <Sidebar />}
                 {children}
               </div>
             </div>
-          </SupabaseProvider>
+          </NextAuthProvider>
         </ThemeProvider>
         <Toaster />
       </body>

@@ -11,16 +11,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { supabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
 import { Trash } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useToast } from "./ui/use-toast";
 
 export default function Sidebar() {
-  const supabase = supabaseBrowser();
   const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
@@ -36,90 +34,90 @@ export default function Sidebar() {
 
   const [currentItemId, setCurrentItemId] = useState(null);
 
-  async function createCollection(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!title) return;
+  // async function createCollection(e: React.FormEvent<HTMLFormElement>) {
+  //   e.preventDefault();
+  //   if (!title) return;
 
-    setCreateModalLoading(true);
-    const { data, error } = await supabase
-      .from("collections")
-      .insert({ title });
+  //   setCreateModalLoading(true);
+  //   const { data, error } = await supabase
+  //     .from("collections")
+  //     .insert({ title });
 
-    setCreateModalLoading(false);
+  //   setCreateModalLoading(false);
 
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
-    }
+  //   if (error) {
+  //     toast({ title: "Error", description: error.message });
+  //     return;
+  //   }
 
-    setCreateModalOpen(false);
-    setTitle("");
-  }
+  //   setCreateModalOpen(false);
+  //   setTitle("");
+  // }
 
-  async function deleteCollection() {
-    setDeleteLoading(true);
-    const { error } = await supabase
-      .from("collections")
-      .delete()
-      .eq("id", currentItemId);
+  // async function deleteCollection() {
+  //   setDeleteLoading(true);
+  //   const { error } = await supabase
+  //     .from("collections")
+  //     .delete()
+  //     .eq("id", currentItemId);
 
-    setDeleteLoading(false);
+  //   setDeleteLoading(false);
 
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
-    }
+  //   if (error) {
+  //     toast({ title: "Error", description: error.message });
+  //     return;
+  //   }
 
-    setDeleteModalOpen(false);
-    router.replace("/");
-  }
+  //   setDeleteModalOpen(false);
+  //   router.replace("/");
+  // }
 
-  async function getCollections() {
-    const { data, error } = await supabase.from("collections").select("*");
+  // async function getCollections() {
+  //   const { data, error } = await supabase.from("collections").select("*");
 
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
-    }
+  //   if (error) {
+  //     toast({ title: "Error", description: error.message });
+  //     return;
+  //   }
 
-    setCollections(data);
-  }
+  //   setCollections(data);
+  // }
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("notes-collections")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "notes", table: "collections" },
-        (payload) => {
-          console.log(payload);
+  // useEffect(() => {
+  //   const channel = supabase
+  //     .channel("notes-collections")
+  //     .on(
+  //       "postgres_changes",
+  //       { event: "*", schema: "notes", table: "collections" },
+  //       (payload) => {
+  //         console.log(payload);
 
-          switch (payload.eventType) {
-            case "INSERT":
-              setCollections((e) => [...e, payload.new]);
-              break;
-            case "DELETE":
-              setCollections((e) => e.filter((x) => x.id !== payload.old.id));
-              break;
-            case "UPDATE":
-              setCollections((e) =>
-                e.map((x) => (x.id === payload.new.id ? payload.new : x))
-              );
-            default:
-              break;
-          }
-        }
-      )
-      .subscribe();
+  //         switch (payload.eventType) {
+  //           case "INSERT":
+  //             setCollections((e) => [...e, payload.new]);
+  //             break;
+  //           case "DELETE":
+  //             setCollections((e) => e.filter((x) => x.id !== payload.old.id));
+  //             break;
+  //           case "UPDATE":
+  //             setCollections((e) =>
+  //               e.map((x) => (x.id === payload.new.id ? payload.new : x))
+  //             );
+  //           default:
+  //             break;
+  //         }
+  //       }
+  //     )
+  //     .subscribe();
 
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     channel.unsubscribe();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    getCollections();
-  }, []);
+  // useEffect(() => {
+  //   getCollections();
+  // }, []);
 
   return (
     <div className="flex flex-col border-r h-full w-full max-w-[300px] justify-between p-4">
@@ -128,7 +126,7 @@ export default function Sidebar() {
           <Button className="w-full">Create Colleciton</Button>
         </DialogTrigger>
         <DialogContent>
-          <form onSubmit={createCollection}>
+          <form>
             <DialogHeader>
               <DialogTitle>Create Collection</DialogTitle>
             </DialogHeader>
@@ -171,7 +169,7 @@ export default function Sidebar() {
             </DialogTrigger>
             <Button
               loading={deleteLoading}
-              onClick={deleteCollection}
+              // onClick={deleteCollection}
               variant="destructive"
             >
               Delete

@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/lib/supabase-server";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 export default async function AuthLayout({
@@ -6,10 +6,7 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = supabaseServer();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getServerSession();
 
   if (session) redirect("/dashboard");
 

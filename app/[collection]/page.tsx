@@ -2,9 +2,8 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { supabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface CollectionProps {
   params: { collection: string };
@@ -13,69 +12,68 @@ interface CollectionProps {
 export default function Page({ params: { collection } }: CollectionProps) {
   const [content, setContent] = useState("");
   const [data, setData] = useState<any[]>([]);
-  const supabase = supabaseBrowser();
 
-  async function updateTodo(id: string, done: boolean) {
-    await supabase.from("data").update({ done }).eq("id", id);
-  }
+  // async function updateTodo(id: string, done: boolean) {
+  //   await supabase.from("data").update({ done }).eq("id", id);
+  // }
 
-  async function createTodo(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!content) return;
+  // async function createTodo(e: React.FormEvent<HTMLFormElement>) {
+  //   e.preventDefault();
+  //   if (!content) return;
 
-    await supabase.from("data").insert({ content, collection });
+  //   await supabase.from("data").insert({ content, collection });
 
-    setContent("");
-  }
+  //   setContent("");
+  // }
 
-  async function getData() {
-    const { data, error } = await supabase
-      .from("data")
-      .select("*")
-      .eq("collection", collection);
+  // async function getData() {
+  //   const { data, error } = await supabase
+  //     .from("data")
+  //     .select("*")
+  //     .eq("collection", collection);
 
-    if (!data) return;
+  //   if (!data) return;
 
-    setData(data);
-  }
+  //   setData(data);
+  // }
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("notes-data")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "notes", table: "data" },
-        (payload) => {
-          switch (payload.eventType) {
-            case "INSERT":
-              setData((e) => [...e, payload.new]);
-              break;
-            case "DELETE":
-              setData((e) => e.filter((x) => x.id !== payload.old.id));
-              break;
-            case "UPDATE":
-              setData((e) =>
-                e.map((x) => (x.id === payload.new.id ? payload.new : x))
-              );
-            default:
-              break;
-          }
-        }
-      )
-      .subscribe();
+  // useEffect(() => {
+  //   const channel = supabase
+  //     .channel("notes-data")
+  //     .on(
+  //       "postgres_changes",
+  //       { event: "*", schema: "notes", table: "data" },
+  //       (payload) => {
+  //         switch (payload.eventType) {
+  //           case "INSERT":
+  //             setData((e) => [...e, payload.new]);
+  //             break;
+  //           case "DELETE":
+  //             setData((e) => e.filter((x) => x.id !== payload.old.id));
+  //             break;
+  //           case "UPDATE":
+  //             setData((e) =>
+  //               e.map((x) => (x.id === payload.new.id ? payload.new : x))
+  //             );
+  //           default:
+  //             break;
+  //         }
+  //       }
+  //     )
+  //     .subscribe();
 
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     channel.unsubscribe();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    getData();
-  }, []);
+  // useEffect(() => {
+  //   getData();
+  // }, []);
 
   return (
     <main className="flex flex-col w-full p-2 max-w-xl mx-auto">
-      <form className="w-full" onSubmit={createTodo}>
+      <form className="w-full">
         <Input
           placeholder="Create a checklist"
           value={content}
@@ -90,7 +88,7 @@ export default function Page({ params: { collection } }: CollectionProps) {
           >
             <Checkbox
               checked={e.done}
-              onCheckedChange={(done: boolean) => updateTodo(e.id, done)}
+              // onCheckedChange={(done: boolean) => updateTodo(e.id, done)}
             />
             <label
               htmlFor={e.id}
