@@ -57,7 +57,7 @@ export default function Page() {
       });
       return;
     }
-    router.replace("/");
+    router.refresh();
   }
 
   return (
@@ -92,8 +92,8 @@ export default function Page() {
                 </FormItem>
               )}
             />
-            <Button loading={loading} type="submit">
-              Submit
+            <Button loading={loading} type="submit" className="mt-4 w-full">
+              Login
             </Button>
           </form>
         </Form>

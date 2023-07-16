@@ -7,10 +7,7 @@ import { cn } from "@/lib/utils";
 import { NextAuthProvider } from "@/providers/nextauth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { getServerSession } from "next-auth/next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Todo App",
@@ -23,8 +20,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(OPTIONS);
-
-  console.log(session);
 
   return (
     <html lang="en">

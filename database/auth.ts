@@ -5,7 +5,7 @@ export async function login(email: string, password: string) {
   try {
     const response = await sql<
       User[]
-    >`SELECT * FROM "auth".users WHERE email = ${email} AND password = crypt(${password}, gen_salt('bf'))`;
+    >`SELECT * FROM "auth".users WHERE email = ${email} AND password = crypt(${password}, password)`;
 
     if (response.length > 0) return response[0];
   } catch (error) {

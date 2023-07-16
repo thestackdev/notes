@@ -2,35 +2,48 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const formSchema = z.object({
+  username: z.string().min(2).max(50),
+  display_name: z.string().min(2).max(50),
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    username: "",
-    display_name: "",
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      display_name: "",
+      email: "",
+      password: "",
+    },
   });
 
-  const router = useRouter();
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
 
     const response = await signIn("credentials", {
-      email: form.email,
-      password: form.password,
-      username: form.username,
-      display_name: form.display_name,
+      ...values,
       isNewUser: true,
       redirect: false,
     });
@@ -44,61 +57,79 @@ export default function Page() {
       return;
     }
     router.replace("/");
-  };
+  }
+
+  const router = useRouter();
+  const { toast } = useToast();
 
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
       <h1 className="text-2xl font-bold">Register</h1>
       <Card className="mt-4 p-4">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label>Full Name</Label>
-            <Input
-              className="mt-2"
-              type="text"
-              placeholder="John Doe"
-              value={form.display_name}
-              onChange={(e) =>
-                setForm({ ...form, display_name: e.target.value })
-              }
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="display_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="mb-4">
-            <Label>Username</Label>
-            <Input
-              className="mt-2"
-              type="text"
-              placeholder="john"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="john" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="mb-4">
-            <Label>Email</Label>
-            <Input
-              className="mt-2"
-              type="email"
+            <FormField
+              control={form.control}
               name="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="user@example.com"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="Email Address"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="mb-4">
-            <Label>Password</Label>
-            <Input
-              className="mt-2"
+            <FormField
+              control={form.control}
               name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <Button loading={loading} className="mt-4 w-full">
-            Register
-          </Button>
-        </form>
+
+            <Button loading={loading} className="mt-4 w-full">
+              Register
+            </Button>
+          </form>
+        </Form>
         <div className="text-center mt-4">
           <span>
             Already have an account?{" "}
