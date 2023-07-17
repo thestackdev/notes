@@ -11,11 +11,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Collection } from "@/database/types";
 import { cn } from "@/lib/utils";
-import { Trash } from "lucide-react";
+import { LoaderIcon, Trash } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "react-query";
 import { useToast } from "./ui/use-toast";
 
 export default function Sidebar() {
@@ -24,7 +26,7 @@ export default function Sidebar() {
   const params = useParams();
   const currentCollection = params?.collection;
 
-  const [collections, setCollections] = useState<any[]>([]);
+  // const [collections, setCollections] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createModalLoading, setCreateModalLoading] = useState(false);
@@ -72,17 +74,6 @@ export default function Sidebar() {
   //   router.replace("/");
   // }
 
-  // async function getCollections() {
-  //   const { data, error } = await supabase.from("collections").select("*");
-
-  //   if (error) {
-  //     toast({ title: "Error", description: error.message });
-  //     return;
-  //   }
-
-  //   setCollections(data);
-  // }
-
   // useEffect(() => {
   //   const channel = supabase
   //     .channel("notes-collections")
@@ -115,9 +106,22 @@ export default function Sidebar() {
   //   };
   // }, []);
 
-  // useEffect(() => {
-  //   getCollections();
-  // }, []);
+  const {
+    isLoading,
+    error,
+    data: collections,
+  } = useQuery<Collection[]>("get-collections", () =>
+    fetch("/api/collections").then((res) => res.json())
+  );
+
+  if (isLoading) {
+    return <LoaderIcon className="animate-spin w-6 h-6" />;
+  }
+
+  if (error) {
+    toast({ title: "Error", description: error.toString() });
+    return;
+  }
 
   return (
     <div className="flex flex-col border-r h-full w-full max-w-[300px] justify-between p-4">
@@ -187,13 +191,13 @@ export default function Sidebar() {
             href={`/${collection.id}`}
             key={collection.id}
           >
-            {collection.title}
+            {collection.label}
             <Button
               variant="ghost"
               className="group-hover:visible invisible"
               onClick={(e) => {
                 setDeleteModalOpen(true);
-                setCurrentItemId(collection.id);
+                // setCurrentItemId(collection.id);
               }}
             >
               <Trash className="w-4 h-4" />

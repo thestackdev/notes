@@ -7,3 +7,10 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
+
+export interface Collection {
+  id: string;
+  label: string;
+  created_at: string;
+  updated_at: string;
+}

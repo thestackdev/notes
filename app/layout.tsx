@@ -5,6 +5,7 @@ import { Toaster } from "@/components/Toaster";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { NextAuthProvider } from "@/providers/nextauth-provider";
+import ReactQueryProvider from "@/providers/react-query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { getServerSession } from "next-auth/next";
 import "./globals.css";
@@ -28,18 +29,20 @@ export default async function RootLayout({
           `bg-background min-h-screen w-full font-sans antialiased`
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <NextAuthProvider>
-            <div className="flex flex-col h-screen">
-              <Navbar />
-              <Separator />
-              <div className="flex flex-grow">
-                {session && <Sidebar />}
-                {children}
+        <ReactQueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <NextAuthProvider>
+              <div className="flex flex-col h-screen">
+                <Navbar />
+                <Separator />
+                <div className="flex flex-grow">
+                  {session && <Sidebar />}
+                  {children}
+                </div>
               </div>
-            </div>
-          </NextAuthProvider>
-        </ThemeProvider>
+            </NextAuthProvider>
+          </ThemeProvider>
+        </ReactQueryProvider>
         <Toaster />
       </body>
     </html>

@@ -44,3 +44,49 @@ values
 --limit 1;
 
 select * from auth.users;
+
+
+create schema if not exists notes;
+
+create table if not exists "notes".collections (
+	"id" uuid primary key default gen_random_uuid(),
+	"label" text not null check (length(label) > 3),
+	"user_id" uuid not null foreign ("user_id") key references "auth".users (id) on delete cascade,
+	"created_at" timestamp with time zone not null default now(),
+	"updated_at" timestamp with time zone not null default now()
+)
+
+alter table "notes".collections
+add column user_id uuid,
+add constraint fkey_collections_users
+    foreign key (user_id)
+    references "auth".users (id);
+
+
+select * from "notes".collections
+
+
+drop table "notes".collections;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
