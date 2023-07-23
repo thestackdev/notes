@@ -1,15 +1,17 @@
 import sql from "@/database";
-import { User } from "@/database/types";
+import { User } from "@/types/database";
 
 export async function login(email: string, password: string) {
   try {
-    const response = await sql<
-      User[]
-    >`SELECT * FROM "auth".users WHERE email = ${email} AND password = crypt(${password}, password)`;
+    const response = await sql<User[]>`
+    SELECT *
+    FROM "auth".users 
+    WHERE email = ${email} AND password = crypt(${password}, password)
+    `;
 
     if (response.length > 0) return response[0];
-  } catch (error) {
-    console.log(error);
+  } catch (e) {
+    console.log(e);
   }
   return null;
 }
@@ -30,8 +32,20 @@ export async function register(
 
     if (response.length > 0) return response[0];
   } catch (e) {
-    const error = e as Error;
-    console.log(error.message);
+    console.log(e);
+  }
+  return null;
+}
+
+export async function getUserById(email: string) {
+  try {
+    const response = await sql<
+      User[]
+    >`SELECT * FROM "auth".users WHERE email = ${email}`;
+
+    if (response.length > 0) return response[0];
+  } catch (e) {
+    console.log(e);
   }
   return null;
 }

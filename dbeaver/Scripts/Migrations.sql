@@ -43,46 +43,54 @@ values
 --where email = 'shanmukeshwar03@gmail.com' and password = crypt('johnspassword', password)
 --limit 1;
 
-select * from auth.users;
+select * from auth.users where email = 'shanmukeshwar03@gmail.com';
 
 
 create schema if not exists notes;
 
 create table if not exists "notes".collections (
-	"id" uuid primary key default gen_random_uuid(),
-	"label" text not null check (length(label) > 3),
-	"user_id" uuid not null foreign ("user_id") key references "auth".users (id) on delete cascade,
-	"created_at" timestamp with time zone not null default now(),
-	"updated_at" timestamp with time zone not null default now()
-)
-
-alter table "notes".collections
-add column user_id uuid,
-add constraint fkey_collections_users
-    foreign key (user_id)
-    references "auth".users (id);
+    "id" uuid primary key default gen_random_uuid(),
+    "label" text not null check (length("label") > 3),
+    "user_id" uuid not null,
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone not null default now(),
+    constraint "fk_collections_users"
+        foreign key ("user_id")
+        references "auth".users ("id")
+        on
+delete
+	cascade
+);
 
 
 select * from "notes".collections
 
-
 drop table "notes".collections;
 
+insert into "notes".collections (user_id, label) values ('32f9ecd6-6d01-4b53-8c98-1728711e97d0', 'Hello world1')
 
 
+create table if not exists "notes".data (
+    "id" uuid primary key default gen_random_uuid(),
+    "content" text not null check (length("content") > 0),
+    "user_id" uuid not null,
+    "collection_id" uuid not null,
+    "is_done" boolean not null default false,
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone not null default now(),
+    constraint "fk_data_users"
+        foreign key ("user_id")
+        references "auth".users ("id")
+    	on delete cascade,
+	constraint "fk_data_collections"
+		foreign key ("collection_id")
+		references "notes".collections
+		on delete cascade
+);
 
+select * from notes."data" d;
 
-
-
-
-
-
-
-
-
-
-
-
+drop table notes."data";
 
 
 

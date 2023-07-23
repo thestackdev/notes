@@ -22,8 +22,6 @@ import * as z from "zod";
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   const formSchema = z.object({
     email: z.string().email(),

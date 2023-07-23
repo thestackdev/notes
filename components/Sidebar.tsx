@@ -11,126 +11,107 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Collection } from "@/database/types";
+import useUtils from "@/hooks/useUtils";
 import { cn } from "@/lib/utils";
-import { LoaderIcon, Trash } from "lucide-react";
-import Link from "next/link";
+import { Collection } from "@/types/database";
+import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { useToast } from "./ui/use-toast";
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+}
+
+export default function Sidebar({ className }: SidebarProps) {
   const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
   const currentCollection = params?.collection;
 
-  // const [collections, setCollections] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createModalLoading, setCreateModalLoading] = useState(false);
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const { isOpen, toggle } = useUtils();
 
-  const [currentItemId, setCurrentItemId] = useState(null);
-
-  // async function createCollection(e: React.FormEvent<HTMLFormElement>) {
-  //   e.preventDefault();
-  //   if (!title) return;
-
-  //   setCreateModalLoading(true);
-  //   const { data, error } = await supabase
-  //     .from("collections")
-  //     .insert({ title });
-
-  //   setCreateModalLoading(false);
-
-  //   if (error) {
-  //     toast({ title: "Error", description: error.message });
-  //     return;
-  //   }
-
-  //   setCreateModalOpen(false);
-  //   setTitle("");
-  // }
-
-  // async function deleteCollection() {
-  //   setDeleteLoading(true);
-  //   const { error } = await supabase
-  //     .from("collections")
-  //     .delete()
-  //     .eq("id", currentItemId);
-
-  //   setDeleteLoading(false);
-
-  //   if (error) {
-  //     toast({ title: "Error", description: error.message });
-  //     return;
-  //   }
-
-  //   setDeleteModalOpen(false);
-  //   router.replace("/");
-  // }
-
-  // useEffect(() => {
-  //   const channel = supabase
-  //     .channel("notes-collections")
-  //     .on(
-  //       "postgres_changes",
-  //       { event: "*", schema: "notes", table: "collections" },
-  //       (payload) => {
-  //         console.log(payload);
-
-  //         switch (payload.eventType) {
-  //           case "INSERT":
-  //             setCollections((e) => [...e, payload.new]);
-  //             break;
-  //           case "DELETE":
-  //             setCollections((e) => e.filter((x) => x.id !== payload.old.id));
-  //             break;
-  //           case "UPDATE":
-  //             setCollections((e) =>
-  //               e.map((x) => (x.id === payload.new.id ? payload.new : x))
-  //             );
-  //           default:
-  //             break;
-  //         }
-  //       }
-  //     )
-  //     .subscribe();
-
-  //   return () => {
-  //     channel.unsubscribe();
-  //   };
-  // }, []);
-
-  const {
-    isLoading,
-    error,
-    data: collections,
-  } = useQuery<Collection[]>("get-collections", () =>
-    fetch("/api/collections").then((res) => res.json())
+  const { isLoading: collectionsLoading, error: collectionsError } = useQuery<
+    Collection[]
+  >(
+    "get-collections",
+    () => fetch("/api/collections").then((res) => res.json()),
+    {
+      onSuccess: (data) => {
+        setCollections(data);
+      },
+    }
   );
 
-  if (isLoading) {
-    return <LoaderIcon className="animate-spin w-6 h-6" />;
+  const createCollection = useMutation(
+    async (title: String) => {
+      const res = await fetch("/api/collections", {
+        method: "POST",
+        body: JSON.stringify({ label: title }),
+      });
+      return await res.json();
+    },
+    {
+      mutationKey: "create-collection",
+      onSuccess: (data) => {
+        setCreateModalOpen(false);
+        setTitle("");
+        setCollections([data, ...collections]);
+        router.push(data.id);
+      },
+    }
+  );
+
+  const deleteCollection = useMutation(
+    async (id: String) => {
+      await fetch(`/api/collections?id=${id}`, {
+        method: "DELETE",
+      });
+    },
+    {
+      mutationKey: `delete-collection/${currentItemId}`,
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        setCollections(collections.filter((c) => c.id !== currentItemId));
+        router.push("/");
+      },
+    }
+  );
+
+  if (collectionsLoading) {
+    return null;
   }
 
-  if (error) {
-    toast({ title: "Error", description: error.toString() });
+  if (collectionsError) {
+    toast({ title: "Error", description: collectionsError.toString() });
     return;
   }
 
   return (
-    <div className="flex flex-col border-r h-full w-full max-w-[300px] justify-between p-4">
+    <div
+      className={cn(
+        "flex flex-col border-r h-full bg-background w-full max-w-[300px] justify-between p-4 transition-transform duration-300 transform",
+        !isOpen && "-translate-x-full lg:translate-x-0",
+        className
+      )}
+    >
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
         <DialogTrigger>
           <Button className="w-full">Create Colleciton</Button>
         </DialogTrigger>
         <DialogContent>
-          <form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              createCollection.mutate(title);
+            }}
+          >
             <DialogHeader>
               <DialogTitle>Create Collection</DialogTitle>
             </DialogHeader>
@@ -146,7 +127,7 @@ export default function Sidebar() {
             </DialogDescription>
             <DialogFooter className="flex flex-row gap-2">
               <Button
-                loading={createModalLoading}
+                loading={createCollection.isLoading}
                 variant="default"
                 type="submit"
               >
@@ -172,8 +153,8 @@ export default function Sidebar() {
               <Button variant="secondary">Cancel</Button>
             </DialogTrigger>
             <Button
-              loading={deleteLoading}
-              // onClick={deleteCollection}
+              loading={deleteCollection.isLoading}
+              onClick={() => deleteCollection.mutate(currentItemId!)}
               variant="destructive"
             >
               Delete
@@ -183,12 +164,16 @@ export default function Sidebar() {
       </Dialog>
       <div className="flex flex-col w-full h-full gap-2 my-4">
         {collections?.map((collection) => (
-          <Link
+          <Button
+            variant="ghost"
             className={cn(
               "w-full flex group justify-between items-center gap-2 hover:bg-accent capitalize rounded-md p-2",
               currentCollection === collection.id && "bg-accent text-white"
             )}
-            href={`/${collection.id}`}
+            onClick={() => {
+              router.push(collection.id);
+              toggle();
+            }}
             key={collection.id}
           >
             {collection.label}
@@ -196,13 +181,14 @@ export default function Sidebar() {
               variant="ghost"
               className="group-hover:visible invisible"
               onClick={(e) => {
+                e.stopPropagation();
                 setDeleteModalOpen(true);
-                // setCurrentItemId(collection.id);
+                setCurrentItemId(collection.id);
               }}
             >
               <Trash className="w-4 h-4" />
             </Button>
-          </Link>
+          </Button>
         ))}
       </div>
     </div>

@@ -1,8 +1,8 @@
-import { OPTIONS } from "@/app/api/auth/[...nextauth]/route";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/Toaster";
 import { Separator } from "@/components/ui/separator";
+import nextauthOptions from "@/lib/nextauth";
 import { cn } from "@/lib/utils";
 import { NextAuthProvider } from "@/providers/nextauth-provider";
 import ReactQueryProvider from "@/providers/react-query-provider";
@@ -20,7 +20,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(OPTIONS);
+  const session = await getServerSession(nextauthOptions);
 
   return (
     <html lang="en">
@@ -33,10 +33,12 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <NextAuthProvider>
               <div className="flex flex-col h-screen">
-                <Navbar />
+                <Navbar session={session} />
                 <Separator />
-                <div className="flex flex-grow">
-                  {session && <Sidebar />}
+                <div className="flex flex-grow relative">
+                  {session && (
+                    <Sidebar className="absolute left-0 top-0 lg:flex" />
+                  )}
                   {children}
                 </div>
               </div>

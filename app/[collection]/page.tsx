@@ -1,9 +1,22 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Data } from "@/types/database";
+import { Trash } from "lucide-react";
 import { useState } from "react";
+import { useMutation, useQuery } from "react-query";
 
 interface CollectionProps {
   params: { collection: string };
@@ -11,69 +24,99 @@ interface CollectionProps {
 
 export default function Page({ params: { collection } }: CollectionProps) {
   const [content, setContent] = useState("");
-  const [data, setData] = useState<any[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
 
-  // async function updateTodo(id: string, done: boolean) {
-  //   await supabase.from("data").update({ done }).eq("id", id);
-  // }
+  const {
+    isLoading: dataLoading,
+    error: dataError,
+    data: data,
+    refetch: refetchData,
+  } = useQuery<Data[]>(`get-notes-${collection}`, () =>
+    fetch(`/api/data?id=${collection}`).then((res) => res.json())
+  );
 
-  // async function createTodo(e: React.FormEvent<HTMLFormElement>) {
-  //   e.preventDefault();
-  //   if (!content) return;
+  const deleteData = useMutation(
+    async (id: String) => {
+      await fetch(`/api/data?id=${id}`, {
+        method: "DELETE",
+      });
+    },
+    {
+      mutationKey: `delete-collection/${currentItemId}`,
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        refetchData();
+      },
+    }
+  );
 
-  //   await supabase.from("data").insert({ content, collection });
+  const createData = useMutation(
+    async () => {
+      await fetch("/api/data", {
+        method: "POST",
+        body: JSON.stringify({ content, collection_id: collection }),
+      });
+    },
+    {
+      mutationKey: "create-data",
+      onSuccess: () => {
+        setContent("");
+        refetchData();
+      },
+    }
+  );
 
-  //   setContent("");
-  // }
+  const updateData = useMutation(
+    async (params: { id: string; is_done: boolean }) => {
+      const res = await fetch(`/api/data`, {
+        method: "PUT",
+        body: JSON.stringify({ id: params.id, is_done: params.is_done }),
+      });
+      return await res.json();
+    },
+    {
+      mutationKey: "update-data",
+      onSuccess: () => {
+        refetchData();
+      },
+    }
+  );
 
-  // async function getData() {
-  //   const { data, error } = await supabase
-  //     .from("data")
-  //     .select("*")
-  //     .eq("collection", collection);
-
-  //   if (!data) return;
-
-  //   setData(data);
-  // }
-
-  // useEffect(() => {
-  //   const channel = supabase
-  //     .channel("notes-data")
-  //     .on(
-  //       "postgres_changes",
-  //       { event: "*", schema: "notes", table: "data" },
-  //       (payload) => {
-  //         switch (payload.eventType) {
-  //           case "INSERT":
-  //             setData((e) => [...e, payload.new]);
-  //             break;
-  //           case "DELETE":
-  //             setData((e) => e.filter((x) => x.id !== payload.old.id));
-  //             break;
-  //           case "UPDATE":
-  //             setData((e) =>
-  //               e.map((x) => (x.id === payload.new.id ? payload.new : x))
-  //             );
-  //           default:
-  //             break;
-  //         }
-  //       }
-  //     )
-  //     .subscribe();
-
-  //   return () => {
-  //     channel.unsubscribe();
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   getData();
-  // }, []);
+  if (dataLoading) return null;
+  if (dataError) return null;
 
   return (
     <main className="flex flex-col w-full p-2 max-w-xl mx-auto">
-      <form className="w-full">
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Item?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this item?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row gap-2">
+            <DialogTrigger asChild>
+              <Button variant="secondary">Cancel</Button>
+            </DialogTrigger>
+            <Button
+              loading={deleteData.isLoading}
+              onClick={() => deleteData.mutate(currentItemId!)}
+              variant="destructive"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <form
+        className="w-full"
+        onSubmit={(e) => {
+          e.preventDefault();
+          createData.mutate();
+        }}
+      >
         <Input
           placeholder="Create a checklist"
           value={content}
@@ -81,24 +124,38 @@ export default function Page({ params: { collection } }: CollectionProps) {
         />
       </form>
       <div className="w-full mt-6 flex flex-col gap-">
-        {data.map((e) => (
+        {data?.map((e) => (
           <div
-            className="flex items-center space-x-2 hover:bg-accent/90 p-2 rounded-lg"
-            key={e.$id}
+            className="flex group items-center justify-between space-x-2 hover:bg-accent/90 p-2 rounded-lg"
+            key={e.id}
           >
-            <Checkbox
-              checked={e.done}
-              // onCheckedChange={(done: boolean) => updateTodo(e.id, done)}
-            />
-            <label
-              htmlFor={e.id}
-              className={cn(
-                "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                e.done ? "line-through" : ""
-              )}
+            <div className="flex gap-2 items-center">
+              <Checkbox
+                checked={e.is_done}
+                onCheckedChange={(is_done: boolean) =>
+                  updateData.mutate({ id: e.id, is_done })
+                }
+              />
+              <label
+                htmlFor={e.id}
+                className={cn(
+                  "text-sm font-medium cursor-text leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+                  e.is_done ? "line-through" : ""
+                )}
+              >
+                {e.content}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              className="group-hover:visible invisible"
+              onClick={() => {
+                setDeleteModalOpen(true);
+                setCurrentItemId(e.id);
+              }}
             >
-              {e.content}
-            </label>
+              <Trash className="w-4 h-4" />
+            </Button>
           </div>
         ))}
       </div>
