@@ -3,11 +3,6 @@ import nextauthOptions from "@/lib/nextauth";
 import { Collection, Data } from "@/types/database";
 import { getServerSession } from "next-auth";
 
-export const config = {
-  runtime: "edge",
-  unstable_allowDynamic: [],
-};
-
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(nextauthOptions);
