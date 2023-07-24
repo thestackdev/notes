@@ -1,13 +1,11 @@
 {
 	"folders": {},
 	"connections": {
-		"postgres-jdbc-1895fc52024-592bd49d2b1678e2": {
+		"postgres-jdbc-1895fc9c938-63b555ce120a3ba1": {
 			"provider": "postgresql",
 			"driver": "postgres-jdbc",
 			"name": "postgres",
 			"save-password": true,
-			"show-system-objects": true,
-			"virtual-model-id": "postgres-jdbc-18959e099fd-3ef2a1cdfdb7bdf7",
 			"configuration": {
 				"host": "postgres.shanmukeshwar.dev",
 				"port": "5432",

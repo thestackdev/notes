@@ -46,13 +46,12 @@ export default function Page() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (response?.error) {
       toast({
         title: "Login Failed",
         description: "No user found with that email and password",
       });
+      setLoading(false);
       return;
     }
     router.refresh();
