@@ -1,15 +1,14 @@
-import nextauthOptions from "@/lib/nextauth";
-import { getServerSession } from "next-auth";
+import { checkSignedIn } from "@/helpers/session";
 import { redirect } from "next/navigation";
 
-export default async function AuthLayout({
-  children,
-}: {
+interface AuthLayoutProps {
   children: React.ReactNode;
-}) {
-  const session = await getServerSession(nextauthOptions);
+}
 
-  if (session) redirect("/");
+export default async function AuthLayout({ children }: AuthLayoutProps) {
+  const payload = await checkSignedIn();
+
+  if (payload) redirect("/");
 
   return <main className="flex flex-grow">{children}</main>;
 }

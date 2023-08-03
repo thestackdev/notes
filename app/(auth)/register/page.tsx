@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,23 +39,25 @@ export default function Page() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
+    try {
+      setLoading(true);
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      }).then((res) => res.json());
 
-    const response = await signIn("credentials", {
-      ...values,
-      isNewUser: true,
-      redirect: false,
-    });
+      console.log(response);
 
-    setLoading(false);
-    if (response?.error) {
+      router.replace("/");
+    } catch (error) {
       toast({
         title: "Registration Failed",
         description: "Unable to register at the moment.",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-    router.replace("/");
   }
 
   const router = useRouter();

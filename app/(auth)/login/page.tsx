@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,21 +39,28 @@ export default function Page() {
   const { toast } = useToast();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
-    const response = await signIn("credentials", {
-      ...values,
-      redirect: false,
-    });
+    try {
+      setLoading(true);
 
-    if (response?.error) {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error("Login Failed");
+      }
+
+      router.refresh();
+    } catch (error) {
       toast({
         title: "Login Failed",
         description: "No user found with that email and password",
       });
+    } finally {
       setLoading(false);
-      return;
     }
-    router.refresh();
   }
 
   return (

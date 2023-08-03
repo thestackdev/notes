@@ -1,28 +1,30 @@
-import sql from "@/database";
-import nextauthOptions from "@/lib/nextauth";
-import { Collection } from "@/types/database";
-import { getServerSession } from "next-auth";
+import db from "@/db/index";
+import { collections } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+import { jwtVerify } from "jose";
+import { cookies } from "next/headers";
+
+export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(nextauthOptions);
-    const user = session?.user;
+    const cookieStore = cookies();
+    const token = cookieStore.get("token")?.value!;
 
-    const response = await sql<Collection[]>`
-    SELECT * 
-    FROM "notes".collections
-    WHERE user_id = ${user?.id!}
-    ORDER BY created_at DESC
-    `;
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
 
-    sql.CLOSE;
+    const { payload } = await jwtVerify(token, secret);
+
+    const response = await db
+      .select()
+      .from(collections)
+      .where(eq(collections.user_id, payload.sub!));
 
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
   } catch (e) {
-    console.log(e);
     const error = e as Error;
 
     return new Response(error.message, {
@@ -34,20 +36,22 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(nextauthOptions);
-    const user = session?.user;
+    const cookieStore = cookies();
+    const token = cookieStore.get("token")?.value!;
+
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+
+    const { payload } = await jwtVerify(token, secret);
 
     const data = await request.json();
 
-    const response = await sql<Collection[]>`
-    INSERT INTO "notes".collections
-    (label, user_id)
-    VALUES
-    (${data.label}, ${user?.id!})
-    RETURNING *
-    `;
-
-    sql.CLOSE;
+    const response = await db
+      .insert(collections)
+      .values({
+        label: data.label,
+        user_id: payload.sub!,
+      })
+      .returning();
 
     if (!response.length) throw new Error("Error creating collection");
 
@@ -58,33 +62,43 @@ export async function POST(request: Request) {
   } catch (e) {
     console.log(e);
     const error = e as Error;
-    return new Response(error.message, {
-      status: 500,
-      headers: { "content-type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      }
+    );
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const session = await getServerSession(nextauthOptions);
-    const user = session?.user;
+    const cookieStore = cookies();
+    const token = cookieStore.get("token")?.value!;
+
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+
+    const { payload } = await jwtVerify(token, secret);
 
     const searchParams = new URL(request.url).searchParams;
     const id = searchParams.get("id");
 
-    await sql<Collection[]>`
-        DELETE FROM "notes".collections
-        WHERE id = ${id}
-        AND user_id = ${user?.id!}
-    `;
+    if (!id) throw new Error("No id provided");
+
+    await db
+      .delete(collections)
+      .where(
+        and(eq(collections.id, id), eq(collections.user_id, payload.sub!))
+      );
 
     return new Response("Ok", {
       status: 200,
       headers: { "content-type": "application/json" },
     });
   } catch (e) {
-    console.log(e);
     const error = e as Error;
     return new Response(error.message, {
       status: 500,

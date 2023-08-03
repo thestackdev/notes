@@ -1,13 +1,10 @@
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/Toaster";
-import { Separator } from "@/components/ui/separator";
-import nextauthOptions from "@/lib/nextauth";
+import { checkSignedIn } from "@/helpers/session";
 import { cn } from "@/lib/utils";
-import { NextAuthProvider } from "@/providers/nextauth-provider";
 import ReactQueryProvider from "@/providers/react-query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { getServerSession } from "next-auth/next";
 import "./globals.css";
 
 export const metadata = {
@@ -20,7 +17,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(nextauthOptions);
+  const payload = await checkSignedIn();
 
   return (
     <html lang="en">
@@ -31,18 +28,15 @@ export default async function RootLayout({
       >
         <ReactQueryProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <NextAuthProvider>
-              <div className="flex flex-col h-screen">
-                <Navbar session={session} />
-                <Separator />
-                <div className="flex flex-grow relative">
-                  {session && (
-                    <Sidebar className="absolute left-0 top-0 lg:flex" />
-                  )}
-                  {children}
-                </div>
+            <div className="flex flex-col h-screen">
+              <Navbar session={payload} />
+              <div className="flex flex-grow relative">
+                {payload && (
+                  <Sidebar className="absolute left-0 top-0 lg:flex" />
+                )}
+                {children}
               </div>
-            </NextAuthProvider>
+            </div>
           </ThemeProvider>
         </ReactQueryProvider>
         <Toaster />

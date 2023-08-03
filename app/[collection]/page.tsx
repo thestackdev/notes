@@ -32,18 +32,18 @@ export default function Page({ params: { collection } }: CollectionProps) {
     error: dataError,
     data: data,
     refetch: refetchData,
-  } = useQuery<Data[]>(`get-notes-${collection}`, () =>
-    fetch(`/api/data?id=${collection}`).then((res) => res.json())
+  } = useQuery<Data[]>(`get-items-${collection}`, () =>
+    fetch(`/api/items?collection_id=${collection}`).then((res) => res.json())
   );
 
   const deleteData = useMutation(
     async (id: String) => {
-      await fetch(`/api/data?id=${id}`, {
+      await fetch(`/api/items?id=${id}`, {
         method: "DELETE",
       });
     },
     {
-      mutationKey: `delete-collection/${currentItemId}`,
+      mutationKey: `delete-item/${currentItemId}`,
       onSuccess: () => {
         setDeleteModalOpen(false);
         refetchData();
@@ -53,13 +53,13 @@ export default function Page({ params: { collection } }: CollectionProps) {
 
   const createData = useMutation(
     async () => {
-      await fetch("/api/data", {
+      await fetch("/api/items", {
         method: "POST",
         body: JSON.stringify({ content, collection_id: collection }),
       });
     },
     {
-      mutationKey: "create-data",
+      mutationKey: "create-item",
       onSuccess: () => {
         setContent("");
         refetchData();
@@ -69,14 +69,14 @@ export default function Page({ params: { collection } }: CollectionProps) {
 
   const updateData = useMutation(
     async (params: { id: string; is_done: boolean }) => {
-      const res = await fetch(`/api/data`, {
+      const res = await fetch(`/api/items`, {
         method: "PUT",
         body: JSON.stringify({ id: params.id, is_done: params.is_done }),
       });
       return await res.json();
     },
     {
-      mutationKey: "update-data",
+      mutationKey: "update-item",
       onSuccess: () => {
         refetchData();
       },
