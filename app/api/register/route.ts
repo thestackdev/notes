@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const user = response[0];
 
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
     const token = new SignJWT(user)
       .setIssuedAt()

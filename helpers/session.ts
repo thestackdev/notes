@@ -7,7 +7,7 @@ export async function checkSignedIn() {
 
   if (!token) return null;
 
-  const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
   const { payload } = await jwtVerify(token, secret);
 

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value!;
 
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
     const { payload } = await jwtVerify(token, secret);
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value!;
 
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
     const { payload } = await jwtVerify(token, secret);
 
@@ -79,7 +79,7 @@ export async function DELETE(request: Request) {
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value!;
 
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
     const { payload } = await jwtVerify(token, secret);
 
