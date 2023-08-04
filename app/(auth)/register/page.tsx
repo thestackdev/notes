@@ -12,44 +12,36 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { RegisterFormSchema, RegisterSchema } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-  display_name: z.string().min(2).max(50),
-  email: z.string().email(),
-  password: z.string().min(8),
-});
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      display_name: "",
-      email: "",
-      password: "",
-    },
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const form = useForm<RegisterFormSchema>({
+    resolver: zodResolver(RegisterSchema),
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: RegisterFormSchema) {
     try {
       setLoading(true);
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
-      }).then((res) => res.json());
+      });
 
-      console.log(response);
+      if (!response.ok) {
+        throw new Error("Registration Failed");
+      }
 
-      router.replace("/");
+      router.refresh();
     } catch (error) {
       toast({
         title: "Registration Failed",
@@ -60,9 +52,6 @@ export default function Page() {
     }
   }
 
-  const router = useRouter();
-  const { toast } = useToast();
-
   return (
     <main className="w-full max-w-screen-sm mx-auto p-4 mt-8">
       <h1 className="text-2xl font-bold">Register</h1>
@@ -71,10 +60,10 @@ export default function Page() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
-              name="display_name"
+              name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Display Name</FormLabel>
+                  <FormLabel>Full Name</FormLabel>
                   <FormControl>
                     <Input placeholder="John Doe" {...field} />
                   </FormControl>

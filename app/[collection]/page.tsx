@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Data } from "@/types/database";
+import { Item } from "@/types";
 import { Trash } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery } from "react-query";
@@ -26,14 +26,13 @@ export default function Page({ params: { collection } }: CollectionProps) {
   const [content, setContent] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
 
-  const {
-    isLoading: dataLoading,
-    error: dataError,
-    data: data,
-    refetch: refetchData,
-  } = useQuery<Data[]>(`get-items-${collection}`, () =>
-    fetch(`/api/items?collection_id=${collection}`).then((res) => res.json())
+  const { isLoading: dataLoading, error: dataError } = useQuery<Item[]>(
+    `get-items-${collection}`,
+    () =>
+      fetch(`/api/items?collection_id=${collection}`).then((res) => res.json()),
+    { onSuccess: (data) => setItems(data) }
   );
 
   const deleteData = useMutation(
@@ -46,23 +45,25 @@ export default function Page({ params: { collection } }: CollectionProps) {
       mutationKey: `delete-item/${currentItemId}`,
       onSuccess: () => {
         setDeleteModalOpen(false);
-        refetchData();
+        setCurrentItemId(null);
+        setItems(items.filter((item) => item.id !== currentItemId));
       },
     }
   );
 
   const createData = useMutation(
     async () => {
-      await fetch("/api/items", {
+      const res = await fetch("/api/items", {
         method: "POST",
         body: JSON.stringify({ content, collection_id: collection }),
       });
+      return await res.json();
     },
     {
       mutationKey: "create-item",
-      onSuccess: () => {
+      onSuccess: (data) => {
         setContent("");
-        refetchData();
+        setItems([...items, data]);
       },
     }
   );
@@ -77,8 +78,8 @@ export default function Page({ params: { collection } }: CollectionProps) {
     },
     {
       mutationKey: "update-item",
-      onSuccess: () => {
-        refetchData();
+      onSuccess: (data) => {
+        setItems(items.map((item) => (item.id === data.id ? data : item)));
       },
     }
   );
@@ -124,14 +125,14 @@ export default function Page({ params: { collection } }: CollectionProps) {
         />
       </form>
       <div className="w-full mt-6 flex flex-col gap-">
-        {data?.map((e) => (
+        {items?.map((e) => (
           <div
             className="flex group items-center justify-between space-x-2 hover:bg-accent/90 p-2 rounded-lg"
             key={e.id}
           >
             <div className="flex gap-2 items-center">
               <Checkbox
-                checked={e.is_done}
+                checked={e.isDone}
                 onCheckedChange={(is_done: boolean) =>
                   updateData.mutate({ id: e.id, is_done })
                 }
@@ -140,7 +141,7 @@ export default function Page({ params: { collection } }: CollectionProps) {
                 htmlFor={e.id}
                 className={cn(
                   "text-sm font-medium cursor-text leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                  e.is_done ? "line-through" : ""
+                  e.isDone ? "line-through" : ""
                 )}
               >
                 {e.content}

@@ -19,8 +19,8 @@ export async function GET(request: Request) {
       .from(items)
       .where(
         and(
-          eq(items.collection_id, collection_id!),
-          eq(items.user_id, payload.sub!)
+          eq(items.collectionId, collection_id!),
+          eq(items.userId, payload.sub!)
         )
       )
       .orderBy(desc(items.createdAt));
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
       .insert(items)
       .values({
         content: data.content,
-        user_id: payload.sub!,
-        collection_id: data.collection_id,
+        userId: payload.sub!,
+        collectionId: data.collection_id,
       })
       .returning();
 
@@ -86,9 +86,9 @@ export async function PUT(request: Request) {
     const response = await db
       .update(items)
       .set({
-        is_done: data.is_done,
+        isDone: data.is_done,
       })
-      .where(and(eq(items.id, data.id), eq(items.user_id, payload.sub!)))
+      .where(and(eq(items.id, data.id), eq(items.userId, payload.sub!)))
       .returning();
 
     if (!response.length) throw new Error("Error updating data");
@@ -120,7 +120,7 @@ export async function DELETE(request: Request) {
 
     const response = await db
       .delete(items)
-      .where(and(eq(items.id, id!), eq(items.user_id, payload.sub!)))
+      .where(and(eq(items.id, id!), eq(items.userId, payload.sub!)))
       .returning();
 
     if (!response.length) throw new Error("Cannot delete item");

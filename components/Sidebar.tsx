@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import useUtils from "@/hooks/useUtils";
 import { cn } from "@/lib/utils";
-import { Collection } from "@/types/database";
+import { Collection } from "@/types";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -42,11 +42,7 @@ export default function Sidebar({ className }: SidebarProps) {
   >(
     "get-collections",
     () => fetch("/api/collections").then((res) => res.json()),
-    {
-      onSuccess: (data) => {
-        setCollections(data);
-      },
-    }
+    { onSuccess: (data) => setCollections(data) }
   );
 
   const createCollection = useMutation(

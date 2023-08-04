@@ -31,7 +31,7 @@ export const collections = pgTable("collections", {
     .notNull()
     .default(sql`gen_random_uuid()`),
   label: varchar("label").notNull(),
-  user_id: uuid("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -48,9 +48,9 @@ export const items = pgTable("items", {
     .notNull()
     .default(sql`gen_random_uuid()`),
   content: text("content").notNull(),
-  collection_id: uuid("collection_id").references(() => collections.id),
-  user_id: uuid("user_id").references(() => users.id),
-  is_done: boolean("is_done").notNull().default(false),
+  collectionId: uuid("collection_id").references(() => collections.id),
+  userId: uuid("user_id").references(() => users.id),
+  isDone: boolean("is_done").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

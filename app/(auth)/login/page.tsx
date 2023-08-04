@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { LoginForm, LoginFormSchema } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,26 +23,16 @@ import * as z from "zod";
 export default function Page() {
   const [loading, setLoading] = useState(false);
 
-  const formSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
   const router = useRouter();
   const { toast } = useToast();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const form = useForm<LoginFormSchema>({
+    resolver: zodResolver(LoginForm),
+  });
+
+  async function onSubmit(values: z.infer<typeof LoginForm>) {
     try {
       setLoading(true);
-
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

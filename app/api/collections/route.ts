@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const response = await db
       .select()
       .from(collections)
-      .where(eq(collections.user_id, payload.sub!));
+      .where(eq(collections.userId, payload.sub!));
 
     return new Response(JSON.stringify(response), {
       status: 200,
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       .insert(collections)
       .values({
         label: data.label,
-        user_id: payload.sub!,
+        userId: payload.sub!,
       })
       .returning();
 
@@ -90,9 +90,7 @@ export async function DELETE(request: Request) {
 
     await db
       .delete(collections)
-      .where(
-        and(eq(collections.id, id), eq(collections.user_id, payload.sub!))
-      );
+      .where(and(eq(collections.id, id), eq(collections.userId, payload.sub!)));
 
     return new Response("Ok", {
       status: 200,

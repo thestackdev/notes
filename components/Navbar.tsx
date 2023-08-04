@@ -10,15 +10,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useUtils from "@/hooks/useUtils";
 import { cn } from "@/lib/utils";
+import { JWTPayload } from "jose";
 import { MenuIcon, Terminal } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Separator } from "./ui/separator";
 
 interface NavbarProps {
-  session?: any | null;
+  session: JWTPayload | null;
 }
 
 export default function Navbar({ session }: NavbarProps) {
   const { toggle } = useUtils();
+  const router = useRouter();
 
   async function handleSignOut() {
     try {
@@ -29,6 +32,7 @@ export default function Navbar({ session }: NavbarProps) {
     } catch (error) {
       console.log(error);
     } finally {
+      router.refresh();
     }
   }
 
