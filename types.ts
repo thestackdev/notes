@@ -1,4 +1,4 @@
-import { collections, items, users } from "@/db/schema";
+import { collections, users } from "@/db/schema";
 import { createSelectSchema } from "drizzle-zod";
 import * as z from "zod";
 
@@ -17,7 +17,6 @@ export type Task = {
 
 const selectUserSchema = createSelectSchema(users);
 const selectCollectionSchema = createSelectSchema(collections);
-const selectItemSchema = createSelectSchema(items);
 
 export const LoginForm = z.object({
   email: z.string().email().default(""),
@@ -33,6 +32,5 @@ export const RegisterSchema = z.object({
 
 export type User = z.infer<typeof selectUserSchema>;
 export type Collection = z.infer<typeof selectCollectionSchema>;
-export type Item = z.infer<typeof selectItemSchema>;
 export type LoginFormSchema = z.infer<typeof LoginForm>;
 export type RegisterFormSchema = z.infer<typeof RegisterSchema>;
