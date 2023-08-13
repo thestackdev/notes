@@ -2,6 +2,19 @@ import { collections, items, users } from "@/db/schema";
 import { createSelectSchema } from "drizzle-zod";
 import * as z from "zod";
 
+export type Id = string | number;
+
+export type Column = {
+  id: Id;
+  title: string;
+};
+
+export type Task = {
+  id: Id;
+  columnId: Id;
+  content: string;
+};
+
 const selectUserSchema = createSelectSchema(users);
 const selectCollectionSchema = createSelectSchema(collections);
 const selectItemSchema = createSelectSchema(items);

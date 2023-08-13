@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
-  boolean,
+  json,
   pgTable,
   text,
   timestamp,
@@ -25,32 +25,21 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
+const content = JSON.stringify({
+  columns: [],
+  tasks: [],
+});
+
 export const collections = pgTable("collections", {
   id: uuid("id")
     .primaryKey()
     .notNull()
     .default(sql`gen_random_uuid()`),
   label: varchar("label").notNull(),
+  content: json("content").notNull().default(content),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-export const items = pgTable("items", {
-  id: uuid("id")
-    .primaryKey()
-    .notNull()
-    .default(sql`gen_random_uuid()`),
-  content: text("content").notNull(),
-  collectionId: uuid("collection_id").references(() => collections.id),
-  userId: uuid("user_id").references(() => users.id),
-  isDone: boolean("is_done").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -1,0 +1,149 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "id": "44c62a0d-da19-49e2-b4da-7d0afb24908d",
+  "prevId": "655c5b6a-a2ec-48bf-abb6-914348ebfb70",
+  "tables": {
+    "collections": {
+      "name": "collections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{\"columns\":[{\"id\":\"todo\",\"title\":\"Todo\"},{\"id\":\"doing\",\"title\":\"Work in progress\"},{\"id\":\"done\",\"title\":\"Done\"}],\"tasks\":[{\"id\":\"1\",\"columnId\":\"todo\",\"content\":\"List admin APIs for dashboard\"},{\"id\":\"2\",\"columnId\":\"todo\",\"content\":\"Develop user registration functionality with OTP delivered on SMS after email confirmation and phone number confirmation\"},{\"id\":\"3\",\"columnId\":\"doing\",\"content\":\"Conduct security testing\"},{\"id\":\"4\",\"columnId\":\"doing\",\"content\":\"Analyze competitors\"},{\"id\":\"5\",\"columnId\":\"done\",\"content\":\"Create UI kit documentation\"},{\"id\":\"6\",\"columnId\":\"done\",\"content\":\"Dev meeting\"},{\"id\":\"7\",\"columnId\":\"done\",\"content\":\"Deliver dashboard prototype\"},{\"id\":\"8\",\"columnId\":\"todo\",\"content\":\"Optimize application performance\"},{\"id\":\"9\",\"columnId\":\"todo\",\"content\":\"Implement data validation\"},{\"id\":\"10\",\"columnId\":\"todo\",\"content\":\"Design database schema\"},{\"id\":\"11\",\"columnId\":\"todo\",\"content\":\"Integrate SSL web certificates into workflow\"},{\"id\":\"12\",\"columnId\":\"doing\",\"content\":\"Implement error logging and monitoring\"},{\"id\":\"13\",\"columnId\":\"doing\",\"content\":\"Design and implement responsive UI\"}]}'"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "collections_user_id_users_id_fk": {
+          "name": "collections_user_id_users_id_fk",
+          "tableFrom": "collections",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

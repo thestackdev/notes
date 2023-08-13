@@ -16,7 +16,12 @@ export async function GET(request: Request) {
     const { payload } = await jwtVerify(token, secret);
 
     const response = await db
-      .select()
+      .select({
+        id: collections.id,
+        label: collections.label,
+        createdAt: collections.createdAt,
+        updatedAt: collections.updatedAt,
+      })
       .from(collections)
       .where(eq(collections.userId, payload.sub!));
 

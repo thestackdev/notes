@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const { username, fullName, email, password } = await request.json();
 
-    const response = await db
+    const [response] = await db
       .insert(users)
       .values({
         email,
@@ -19,20 +19,19 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    if (!response.length) {
+    if (!response) {
       return new Response(JSON.stringify({ error: "Unable to create user" }), {
         status: 401,
         headers: { "content-type": "application/json" },
       });
     }
 
-    const user = response[0];
-
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-    const token = new SignJWT(user)
+    const token = await new SignJWT(response)
+      .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
-      .setSubject(user.id)
+      .setSubject(response.id)
       .setExpirationTime("2h")
       .sign(secret);
 
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
       status: 200,
       headers: {
         "content-type": "application/json",
-        "Set-Cookie": `token=${token}`,
+        "Set-Cookie": `token=${token};Path=/`,
       },
     });
   } catch (e) {

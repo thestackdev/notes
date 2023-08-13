@@ -8,6 +8,34 @@
       "when": 1690738126742,
       "tag": "0000_left_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1691911214901,
+      "tag": "0001_married_corsair",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1691912137625,
+      "tag": "0002_flashy_venus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1691912436220,
+      "tag": "0003_outgoing_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1691912648560,
+      "tag": "0004_gigantic_tempest",
+      "breakpoints": true
     }
   ]
 }
