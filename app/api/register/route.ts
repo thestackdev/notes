@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setSubject(response.id)
-      .setExpirationTime("2h")
+      .setExpirationTime("365d")
       .sign(secret);
 
     return new Response(JSON.stringify({ success: true, token }), {
