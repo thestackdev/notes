@@ -1,19 +1,15 @@
 import db from "@/db/index";
 import { collections } from "@/db/schema";
+import { checkSignedIn } from "@/helpers/session";
 import { and, eq } from "drizzle-orm";
-import { jwtVerify } from "jose";
-import { cookies } from "next/headers";
 
 export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get("token")?.value!;
+    const session = await checkSignedIn();
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
+    if (!session) return new Response("You are not signed in", { status: 401 });
 
     const response = await db
       .select({
@@ -23,7 +19,7 @@ export async function GET(request: Request) {
         updatedAt: collections.updatedAt,
       })
       .from(collections)
-      .where(eq(collections.userId, payload.sub!));
+      .where(eq(collections.userId, session.sub!));
 
     return new Response(JSON.stringify(response), {
       status: 200,
@@ -41,12 +37,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get("token")?.value!;
+    const session = await checkSignedIn();
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
+    if (!session) return new Response("You are not signed in", { status: 401 });
 
     const data = await request.json();
 
@@ -54,7 +47,7 @@ export async function POST(request: Request) {
       .insert(collections)
       .values({
         label: data.label,
-        userId: payload.sub!,
+        userId: session.sub!,
       })
       .returning();
 
@@ -81,12 +74,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get("token")?.value!;
+    const session = await checkSignedIn();
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
+    if (!session) return new Response("You are not signed in", { status: 401 });
 
     const searchParams = new URL(request.url).searchParams;
     const id = searchParams.get("id");
@@ -95,7 +85,7 @@ export async function DELETE(request: Request) {
 
     await db
       .delete(collections)
-      .where(and(eq(collections.id, id), eq(collections.userId, payload.sub!)));
+      .where(and(eq(collections.id, id), eq(collections.userId, session.sub!)));
 
     return new Response("Ok", {
       status: 200,

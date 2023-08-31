@@ -1,5 +1,6 @@
 import db from "@/db/index";
 import { collections } from "@/db/schema";
+import { checkSignedIn } from "@/helpers/session";
 import { and, eq } from "drizzle-orm";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
@@ -8,12 +9,9 @@ export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get("token")?.value!;
+    const session = await checkSignedIn();
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
+    if (!session) return new Response("You are not signed in", { status: 401 });
 
     const searchParams = new URL(request.url).searchParams;
     const id = searchParams.get("id");
@@ -22,7 +20,7 @@ export async function GET(request: Request) {
       .select()
       .from(collections)
       .where(
-        and(eq(collections.userId, payload.sub!), eq(collections.id, id!))
+        and(eq(collections.userId, session.sub!), eq(collections.id, id!))
       );
 
     return new Response(JSON.stringify(response), {

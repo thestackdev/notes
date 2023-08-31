@@ -67,7 +67,7 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
       onMouseLeave={() => setMouseIsOver(false)}
     >
       <Textarea
-        className="h-full w-full resize-none border-none rounded bg-transparent text-white focus:outline-none cursor-grab"
+        className="h-full w-full resize-none border-none rounded bg-transparent focus:outline-none cursor-grab"
         value={task.content}
         autoFocus
         ref={textAreaRef}

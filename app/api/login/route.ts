@@ -9,26 +9,24 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    const response = await db
+    const [response] = await db
       .select()
       .from(users)
       .where(sql`email = ${email} AND password = crypt(${password}, password)`);
 
-    if (!response.length) {
+    if (!response) {
       return new Response(
         JSON.stringify({ error: "No user found with that email and password" }),
         { status: 401, headers: { "content-type": "application/json" } }
       );
     }
 
-    const user = response[0];
-
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-    const token = await new SignJWT(user)
+    const token = await new SignJWT(response)
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
-      .setSubject(user.id)
+      .setSubject(response.id)
       .setExpirationTime("365d")
       .sign(secret);
 

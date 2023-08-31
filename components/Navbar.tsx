@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useUtils from "@/hooks/useUtils";
 import { cn } from "@/lib/utils";
-import { JWTPayload } from "jose";
+import { Session } from "@/types";
 import { MenuIcon, Terminal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Separator } from "./ui/separator";
 
 interface NavbarProps {
-  session: JWTPayload | null;
+  session: Session | null;
 }
 
 export default function Navbar({ session }: NavbarProps) {
@@ -53,7 +53,7 @@ export default function Navbar({ session }: NavbarProps) {
           <span className="flex gap-2 justify-center items-center">
             <Terminal className="w-6 h-6" />
             <h1 className="text-xl font-semibold tracking-tight transition-colors">
-              Codefusionz
+              Notes
             </h1>
           </span>
           <div className="flex items-center gap-1">
@@ -62,11 +62,8 @@ export default function Navbar({ session }: NavbarProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <Avatar className="h-7 w-7">
-                    <AvatarImage
-                      src="https://github.com/shadcn.png"
-                      alt="Avatar"
-                    />
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarImage src="" alt="Avatar" />
+                    <AvatarFallback>{session.username}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
