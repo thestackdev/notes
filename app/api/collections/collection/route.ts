@@ -5,8 +5,6 @@ import { and, eq } from "drizzle-orm";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-export const runtime = "edge";
-
 export async function GET(request: Request) {
   try {
     const session = await checkSignedIn();

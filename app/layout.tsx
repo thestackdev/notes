@@ -7,8 +7,6 @@ import ReactQueryProvider from "@/providers/react-query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
-export const runtime = "edge";
-
 export const metadata = {
   title: "Todo App",
   description: "Manage your tasks with Todo App",

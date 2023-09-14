@@ -3,11 +3,11 @@ import { users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { SignJWT } from "jose";
 
-export const runtime = "edge";
-
 export async function POST(request: Request) {
   try {
     const { username, fullName, email, password } = await request.json();
+
+    console.log({ username, fullName, email, password });
 
     const [response] = await db
       .insert(users)
@@ -18,6 +18,8 @@ export async function POST(request: Request) {
         username,
       })
       .returning();
+
+    console.log(response);
 
     if (!response) {
       return new Response(JSON.stringify({ error: "Unable to create user" }), {

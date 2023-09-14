@@ -1,7 +1,14 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle, PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-neonConfig.fetchConnectionCache = true;
+const DATABASE_URL = process.env.DATABASE_URL;
 
-const sql = neon(process.env.DATABASE_URL!);
-export default drizzle(sql);
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not defined");
+}
+
+const queryClient = postgres(DATABASE_URL);
+
+const db: PostgresJsDatabase = drizzle(queryClient);
+
+export default db;

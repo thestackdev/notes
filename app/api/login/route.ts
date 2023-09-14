@@ -3,8 +3,6 @@ import { users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { SignJWT } from "jose";
 
-export const runtime = "edge";
-
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();

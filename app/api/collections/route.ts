@@ -3,8 +3,6 @@ import { collections } from "@/db/schema";
 import { checkSignedIn } from "@/helpers/session";
 import { and, eq } from "drizzle-orm";
 
-export const runtime = "edge";
-
 export async function GET(request: Request) {
   try {
     const session = await checkSignedIn();

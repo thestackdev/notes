@@ -1,5 +1,3 @@
-export const runtime = "edge";
-
 export function POST(request: Request) {
   return new Response("Ok", {
     status: 200,

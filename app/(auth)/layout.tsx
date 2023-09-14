@@ -5,8 +5,6 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-export const runtime = "edge";
-
 export default async function AuthLayout({ children }: AuthLayoutProps) {
   const payload = await checkSignedIn();
 
