@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "583969f9-30f9-4d36-a146-264bac2aadac",
+  "id": "1101aa2d-7523-41fd-bdac-7a52de801253",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "collections": {
@@ -20,6 +20,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{\"columns\":[],\"tasks\":[]}'"
         },
         "user_id": {
           "name": "user_id",
@@ -48,83 +55,12 @@
           "name": "collections_user_id_users_id_fk",
           "tableFrom": "collections",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "items": {
-      "name": "items",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "collection_id": {
-          "name": "collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_done": {
-          "name": "is_done",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "items_collection_id_collections_id_fk": {
-          "name": "items_collection_id_collections_id_fk",
-          "tableFrom": "items",
-          "tableTo": "collections",
-          "columnsFrom": ["collection_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "items_user_id_users_id_fk": {
-          "name": "items_user_id_users_id_fk",
-          "tableFrom": "items",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -189,12 +125,16 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": ["username"]
+          "columns": [
+            "username"
+          ]
         },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       }
     }
